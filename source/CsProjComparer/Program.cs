@@ -8,13 +8,19 @@ namespace CsProjComparer
 {
     public class Program
     {
-        private const string Usage = @"Usage: CsProjComparer file1.csproj file2.csproj [optionalIgnore1] [optionalIgnore2...]";
-        private static readonly string[] RelevantElements = { "None", "Compile", "Content", "EmbeddedResource" };
+        private const string Usage =
+            @"Usage: CsProjComparer file1.csproj file2.csproj [optionalIgnore1] [optionalIgnore2...]";
+
+        private static readonly string[] RelevantElements = {"None", "Compile", "Content", "EmbeddedResource"};
 
         public static FileInfo File1 { get; set; }
+
         public static FileInfo File2 { get; set; }
+
         public static string[] IncludesToIgnore { get; set; }
+
         public static XDocument Project1 { get; set; }
+
         public static XDocument Project2 { get; set; }
 
         public static int Main(string[] args)
@@ -22,22 +28,26 @@ namespace CsProjComparer
             // 1. check the arguments
             if (args == null || args.Length < 2)
             {
-                Console.WriteLine(Usage);
+                Console.Error.WriteLine(Usage);
                 return -1;
             }
             File1 = new FileInfo(args[0]);
             if (!File1.Exists)
             {
-                Console.WriteLine($"Project1 does not exist ({File1.FullName}).");
+                Console.Error.WriteLine($"ERROR Project1 does not exist ({File1.FullName}).");
                 return -2;
             }
             File2 = new FileInfo(args[1]);
             if (!File2.Exists)
             {
-                Console.WriteLine($"Project2 does not exist ({File2.FullName}).");
+                Console.Error.WriteLine($"ERROR Project2 does not exist ({File2.FullName}).");
                 return -2;
             }
             IncludesToIgnore = args.Skip(2).ToArray();
+            Console.WriteLine("CsProjComparer.exe {0} {1} {2}",
+                File1.Name.Substring(0, File1.Name.LastIndexOf('.')),
+                File2.Name.Substring(0, File2.Name.LastIndexOf('.')),
+                IncludesToIgnore.Length > 0 ? "(ignore: " + string.Join("|", IncludesToIgnore) + ")" : "");
 
             // 2. now parse the xml, may well throw on invalid args.
             Project1 = XDocument.Load(File1.FullName);
@@ -89,7 +99,8 @@ namespace CsProjComparer
         {
             foreach (string missingFile in missingElements)
             {
-                Console.WriteLine("{0}: missing <{1} Include=\"{2}\" />", fileName, elementName, missingFile);
+                Console.Error.WriteLine("ERROR {0} is missing <{1} Include=\"{2}\" />", fileName, elementName,
+                    missingFile);
             }
         }
     }
