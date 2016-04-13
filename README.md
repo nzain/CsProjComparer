@@ -5,13 +5,18 @@ At some point you or one of your team mates adds a file to one project but forge
 
 And thats why you compile this tool and integrate it as a post build task in both projects. Voila, consistancy!
 
+You can either check out the project and compile for yourself, or download the exe, no install required: [CsProjComparer.exe](https://github.com/nzain/CsProjComparer/releases/download/1.0/CsProjComparer.exe)
+
 ### How it Works
- It takes two arguments, the .csproj files in question.
+ It takes two arguments, the .csproj files in question. Additional arguments indicate certain files to be ignored, e.g. `packages.config` when you compare VS2008 projects with recent nuget based projects.
 
     CsProjComparer.exe "some path/first.csproj" "some path/second.csproj"
+    CsProjComparer.exe "some path/first.csproj" "some path/second.csproj" "packages.config" "path to/IrrelevantCompatibilityClass.cs"
 
 If both projects have the same `None`, `Compile`, `Content`, and `EmbeddedResource` elements in their respective XML, the tool is completely silent and returns exit code 0. Otherwise, differences are written in a human-readable format to the console and a non-zero exit code is returned, which effectively makes the build fail. Check the build output to see whats wrong.
 
 ### Visual Studio Integration as Pre-/Post-Build Task
-Copy the exe to some folder relative to the solution (e.g. repository-root/tools).
-In both visual studio projects add the above command as a post/pre build task. Make sure to add the solution relative path to the tool (VS has macros for that).
+Copy the exe to some folder relative to the solution (e.g. SolutionDir/Tools).
+In both visual studio projects add the above command as a post (or pre) build task. Use Visual Studios macros for relative paths:
+
+    <PostBuildEvent>$(SolutionDir)Tools\CsProjComparer.exe "$(ProjectDir)First.csproj" "$(ProjectDir)Other.csproj"</PostBuildEvent>
