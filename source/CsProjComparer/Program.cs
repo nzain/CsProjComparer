@@ -8,18 +8,19 @@ namespace CsProjComparer
 {
     public class Program
     {
-        private const string Usage = @"Usage: CsProjComparer file1.csproj file2.csproj";
+        private const string Usage = @"Usage: CsProjComparer file1.csproj file2.csproj [optionalIgnore1] [optionalIgnore2...]";
         private static readonly string[] RelevantElements = { "None", "Compile", "Content", "EmbeddedResource" };
 
         public static FileInfo File1 { get; set; }
         public static FileInfo File2 { get; set; }
+        public static string[] IncludesToIgnore { get; set; }
         public static XDocument Project1 { get; set; }
         public static XDocument Project2 { get; set; }
 
         public static int Main(string[] args)
         {
             // 1. check the arguments
-            if (args == null || args.Length != 2)
+            if (args == null || args.Length < 2)
             {
                 Console.WriteLine(Usage);
                 return -1;
@@ -36,6 +37,7 @@ namespace CsProjComparer
                 Console.WriteLine($"Project2 does not exist ({File2.FullName}).");
                 return -2;
             }
+            IncludesToIgnore = args.Skip(2).ToArray();
 
             // 2. now parse the xml, may well throw on invalid args.
             Project1 = XDocument.Load(File1.FullName);
@@ -63,8 +65,12 @@ namespace CsProjComparer
             // XML namespaces are a pain. Avoid them for better compatibility / simplicity?
             foreach (XElement element in doc.Descendants().Where(w => w.Name.LocalName == elementName))
             {
-                var include = element.Attributes().Single(s => s.Name.LocalName == "Include");
-                yield return include.Value;
+                var includeAttr = element.Attributes().Single(s => s.Name.LocalName == "Include");
+                string include = includeAttr.Value;
+                if (!IncludesToIgnore.Contains(include))
+                {
+                    yield return include;
+                }
             }
         }
 
